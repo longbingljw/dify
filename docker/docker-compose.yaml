@@ -4,11 +4,6 @@
 # or docker-compose-template.yaml and regenerate this file.
 # ==================================================================
 
-# ==================================================================
-# ATTENTION: This file is used for Redis cache.
-# If you want to use MySQL cache, please use docker-compose-mysql.yaml.
-# ==================================================================
-
 x-shared-env: &shared-api-worker-env
   CONSOLE_API_URL: ${CONSOLE_API_URL:-}
   CONSOLE_WEB_URL: ${CONSOLE_WEB_URL:-}
@@ -747,7 +742,7 @@ services:
 
   # The DifySandbox
   sandbox:
-    image: langgenius/dify-sandbox:0.2.12dock
+    image: langgenius/dify-sandbox:0.2.12
     restart: always
     environment:
       # The DifySandbox configurations
