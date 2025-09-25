@@ -2,7 +2,6 @@ from collections.abc import Sequence
 
 from core.plugin.entities.bundle import PluginBundleDependency
 from core.plugin.entities.plugin import (
-    GenericProviderID,
     MissingPluginDependency,
     PluginDeclaration,
     PluginEntity,
@@ -16,6 +15,7 @@ from core.plugin.entities.plugin_daemon import (
     PluginListResponse,
 )
 from core.plugin.impl.base import BasePluginClient
+from models.provider_ids import GenericProviderID
 
 
 class PluginInstaller(BasePluginClient):
@@ -37,7 +37,6 @@ class PluginInstaller(BasePluginClient):
             f"plugin/{tenant_id}/management/list",
             PluginListResponse,
             params={"page": 1, "page_size": 256, "response_type": "paged"},
-            
         )
         return result.list
 
@@ -47,31 +46,6 @@ class PluginInstaller(BasePluginClient):
             f"plugin/{tenant_id}/management/list",
             PluginListResponse,
             params={"page": page, "page_size": page_size, "response_type": "paged"},
-            # compatibility: adapt wrapped {code,message,data}, wrapped with data as list, bare {list,total}, or bare list
-            transformer=lambda r: (
-                r
-                if (
-                    isinstance(r, dict)
-                    and {"code", "message", "data"} <= set(r.keys())
-                    and isinstance(r.get("data"), dict)
-                    and {"list", "total"} <= set(r["data"].keys())
-                )
-                else (
-                    {
-                        "code": (r.get("code", 0) if isinstance(r, dict) else 0),
-                        "message": (r.get("message", "") if isinstance(r, dict) else ""),
-                        "data": (
-                            {"list": r["data"], "total": len(r["data"])}
-                            if (isinstance(r, dict) and isinstance(r.get("data"), list))
-                            else (
-                                r
-                                if (isinstance(r, dict) and {"list", "total"} <= set(r.keys()))
-                                else {"list": (r if isinstance(r, list) else []), "total": (len(r) if isinstance(r, list) else 0)}
-                            )
-                        ),
-                    }
-                )
-            ),
         )
 
     def upload_pkg(

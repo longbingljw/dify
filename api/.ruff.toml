@@ -1,14 +1,18 @@
+<<<<<<< HEAD
 exclude = [
     "migrations/*",
     "migrations-mysql/*",
 ]
+=======
+exclude = ["migrations/*"]
+>>>>>>> v1.9.0
 line-length = 120
 
 [format]
 quote-style = "double"
 
 [lint]
-preview = false
+preview = true
 select = [
     "B",       # flake8-bugbear rules
     "C4",      # flake8-comprehensions
@@ -33,6 +37,10 @@ select = [
     "RUF022",  # unsorted-dunder-all
     "S506",    # unsafe-yaml-load
     "SIM",     # flake8-simplify rules
+<<<<<<< HEAD
+=======
+    "T201",    # print-found
+>>>>>>> v1.9.0
     "TRY400",  # error-instead-of-exception
     "TRY401",  # verbose-log-message
     "UP",      # pyupgrade rules
@@ -48,6 +56,10 @@ select = [
     "G001", # don't use str format to logging messages
     "G003", # don't use + in logging messages
     "G004", # don't use f-strings to format logging messages
+<<<<<<< HEAD
+=======
+    "UP042", # use StrEnum
+>>>>>>> v1.9.0
 ]
 
 ignore = [
@@ -67,6 +79,10 @@ ignore = [
     "B006",    # mutable-argument-default
     "B007",    # unused-loop-control-variable
     "B026",    # star-arg-unpacking-after-keyword-arg
+<<<<<<< HEAD
+=======
+    "B901",    # allow return in yield
+>>>>>>> v1.9.0
     "B903",    # class-as-data-structure
     "B904",    # raise-without-from-inside-except
     "B905",    # zip-without-explicit-strict
@@ -92,11 +108,18 @@ ignore = [
 "configs/*" = [
     "N802", # invalid-function-name
 ]
+"core/model_runtime/callbacks/base_callback.py" = [
+    "T201",
+]
+"core/workflow/callbacks/workflow_logging_callback.py" = [
+    "T201",
+]
 "libs/gmpy2_pkcs10aep_cipher.py" = [
     "N803", # invalid-argument-name
 ]
 "tests/*" = [
     "F811", # redefined-while-unused
+    "T201", # allow print in tests
 ]
 
 [lint.pyflakes]

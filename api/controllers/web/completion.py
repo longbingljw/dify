@@ -4,7 +4,7 @@ from flask_restx import reqparse
 from werkzeug.exceptions import InternalServerError, NotFound
 
 import services
-from controllers.web import api
+from controllers.web import web_ns
 from controllers.web.error import (
     AppUnavailableError,
     CompletionRequestError,
@@ -35,7 +35,34 @@ logger = logging.getLogger(__name__)
 
 
 # define completion api for user
+@web_ns.route("/completion-messages")
 class CompletionApi(WebApiResource):
+    @web_ns.doc("Create Completion Message")
+    @web_ns.doc(description="Create a completion message for text generation applications.")
+    @web_ns.doc(
+        params={
+            "inputs": {"description": "Input variables for the completion", "type": "object", "required": True},
+            "query": {"description": "Query text for completion", "type": "string", "required": False},
+            "files": {"description": "Files to be processed", "type": "array", "required": False},
+            "response_mode": {
+                "description": "Response mode: blocking or streaming",
+                "type": "string",
+                "enum": ["blocking", "streaming"],
+                "required": False,
+            },
+            "retriever_from": {"description": "Source of retriever", "type": "string", "required": False},
+        }
+    )
+    @web_ns.doc(
+        responses={
+            200: "Success",
+            400: "Bad Request",
+            401: "Unauthorized",
+            403: "Forbidden",
+            404: "App Not Found",
+            500: "Internal Server Error",
+        }
+    )
     def post(self, app_model, end_user):
         if app_model.mode != "completion":
             raise NotCompletionAppError()
@@ -80,7 +107,21 @@ class CompletionApi(WebApiResource):
             raise InternalServerError()
 
 
+@web_ns.route("/completion-messages/<string:task_id>/stop")
 class CompletionStopApi(WebApiResource):
+    @web_ns.doc("Stop Completion Message")
+    @web_ns.doc(description="Stop a running completion message task.")
+    @web_ns.doc(params={"task_id": {"description": "Task ID to stop", "type": "string", "required": True}})
+    @web_ns.doc(
+        responses={
+            200: "Success",
+            400: "Bad Request",
+            401: "Unauthorized",
+            403: "Forbidden",
+            404: "Task Not Found",
+            500: "Internal Server Error",
+        }
+    )
     def post(self, app_model, end_user, task_id):
         if app_model.mode != "completion":
             raise NotCompletionAppError()
@@ -90,7 +131,36 @@ class CompletionStopApi(WebApiResource):
         return {"result": "success"}, 200
 
 
+@web_ns.route("/chat-messages")
 class ChatApi(WebApiResource):
+    @web_ns.doc("Create Chat Message")
+    @web_ns.doc(description="Create a chat message for conversational applications.")
+    @web_ns.doc(
+        params={
+            "inputs": {"description": "Input variables for the chat", "type": "object", "required": True},
+            "query": {"description": "User query/message", "type": "string", "required": True},
+            "files": {"description": "Files to be processed", "type": "array", "required": False},
+            "response_mode": {
+                "description": "Response mode: blocking or streaming",
+                "type": "string",
+                "enum": ["blocking", "streaming"],
+                "required": False,
+            },
+            "conversation_id": {"description": "Conversation UUID", "type": "string", "required": False},
+            "parent_message_id": {"description": "Parent message UUID", "type": "string", "required": False},
+            "retriever_from": {"description": "Source of retriever", "type": "string", "required": False},
+        }
+    )
+    @web_ns.doc(
+        responses={
+            200: "Success",
+            400: "Bad Request",
+            401: "Unauthorized",
+            403: "Forbidden",
+            404: "App Not Found",
+            500: "Internal Server Error",
+        }
+    )
     def post(self, app_model, end_user):
         app_mode = AppMode.value_of(app_model.mode)
         if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:
@@ -140,7 +210,21 @@ class ChatApi(WebApiResource):
             raise InternalServerError()
 
 
+@web_ns.route("/chat-messages/<string:task_id>/stop")
 class ChatStopApi(WebApiResource):
+    @web_ns.doc("Stop Chat Message")
+    @web_ns.doc(description="Stop a running chat message task.")
+    @web_ns.doc(params={"task_id": {"description": "Task ID to stop", "type": "string", "required": True}})
+    @web_ns.doc(
+        responses={
+            200: "Success",
+            400: "Bad Request",
+            401: "Unauthorized",
+            403: "Forbidden",
+            404: "Task Not Found",
+            500: "Internal Server Error",
+        }
+    )
     def post(self, app_model, end_user, task_id):
         app_mode = AppMode.value_of(app_model.mode)
         if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:
@@ -149,9 +233,3 @@ class ChatStopApi(WebApiResource):
         AppQueueManager.set_stop_flag(task_id, InvokeFrom.WEB_APP, end_user.id)
 
         return {"result": "success"}, 200
-
-
-api.add_resource(CompletionApi, "/completion-messages")
-api.add_resource(CompletionStopApi, "/completion-messages/<string:task_id>/stop")
-api.add_resource(ChatApi, "/chat-messages")
-api.add_resource(ChatStopApi, "/chat-messages/<string:task_id>/stop")

@@ -3,8 +3,8 @@ import uuid
 from contextlib import contextmanager
 from typing import Any
 
-import psycopg2.extras  # type: ignore
-import psycopg2.pool  # type: ignore
+import psycopg2.extras
+import psycopg2.pool
 from pydantic import BaseModel, model_validator
 
 from configs import dify_config
@@ -24,7 +24,7 @@ class AnalyticdbVectorBySqlConfig(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def validate_config(cls, values: dict) -> dict:
+    def validate_config(cls, values: dict):
         if not values["host"]:
             raise ValueError("config ANALYTICDB_HOST is required")
         if not values["port"]:
@@ -53,7 +53,7 @@ class AnalyticdbVectorBySql:
         if not self.pool:
             self.pool = self._create_connection_pool()
 
-    def _initialize(self) -> None:
+    def _initialize(self):
         cache_key = f"vector_initialize_{self.config.host}"
         lock_name = f"{cache_key}_lock"
         with redis_client.lock(lock_name, timeout=20):
@@ -86,7 +86,7 @@ class AnalyticdbVectorBySql:
             conn.commit()
             self.pool.putconn(conn)
 
-    def _initialize_vector_database(self) -> None:
+    def _initialize_vector_database(self):
         conn = psycopg2.connect(
             host=self.config.host,
             port=self.config.port,
@@ -192,7 +192,7 @@ class AnalyticdbVectorBySql:
             cur.execute(f"SELECT id FROM {self.table_name} WHERE ref_doc_id = %s", (id,))
             return cur.fetchone() is not None
 
-    def delete_by_ids(self, ids: list[str]) -> None:
+    def delete_by_ids(self, ids: list[str]):
         if not ids:
             return
         with self._get_cursor() as cur:
@@ -202,7 +202,7 @@ class AnalyticdbVectorBySql:
                 if "does not exist" not in str(e):
                     raise e
 
-    def delete_by_metadata_field(self, key: str, value: str) -> None:
+    def delete_by_metadata_field(self, key: str, value: str):
         with self._get_cursor() as cur:
             try:
                 cur.execute(f"DELETE FROM {self.table_name} WHERE metadata_->>%s = %s", (key, value))
@@ -232,8 +232,8 @@ class AnalyticdbVectorBySql:
             )
             documents = []
             for record in cur:
-                id, vector, score, page_content, metadata = record
-                if score > score_threshold:
+                _, vector, score, page_content, metadata = record
+                if score >= score_threshold:
                     metadata["score"] = score
                     doc = Document(
                         page_content=page_content,
@@ -264,7 +264,7 @@ class AnalyticdbVectorBySql:
             )
             documents = []
             for record in cur:
-                id, vector, page_content, metadata, score = record
+                _, vector, page_content, metadata, score = record
                 metadata["score"] = score
                 doc = Document(
                     page_content=page_content,
@@ -274,6 +274,6 @@ class AnalyticdbVectorBySql:
                 documents.append(doc)
         return documents
 
-    def delete(self) -> None:
+    def delete(self):
         with self._get_cursor() as cur:
             cur.execute(f"DROP TABLE IF EXISTS {self.table_name}")

@@ -106,6 +106,10 @@ export const useMarketplacePlugins = () => {
   }
 }
 
+/**
+ * ! Support zh-Hans, pt-BR, ja-JP and en-US for Marketplace page
+ * ! For other languages, use en-US as fallback
+ */
 export const useMixedTranslation = (localeFromOuter?: string) => {
   let t = useTranslation().t
 

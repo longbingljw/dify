@@ -11,7 +11,6 @@ import logging
 import os
 from collections.abc import Generator
 from pathlib import Path
-from typing import Optional
 
 import pytest
 from flask import Flask
@@ -24,7 +23,7 @@ from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
 from app_factory import create_app
-from models import db
+from extensions.ext_database import db
 
 # Configure logging for test containers
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -42,13 +41,14 @@ class DifyTestContainers:
 
     def __init__(self):
         """Initialize container management with default configurations."""
-        self.postgres: Optional[PostgresContainer] = None
-        self.redis: Optional[RedisContainer] = None
-        self.dify_sandbox: Optional[DockerContainer] = None
+        self.postgres: PostgresContainer | None = None
+        self.redis: RedisContainer | None = None
+        self.dify_sandbox: DockerContainer | None = None
+        self.dify_plugin_daemon: DockerContainer | None = None
         self._containers_started = False
         logger.info("DifyTestContainers initialized - ready to manage test containers")
 
-    def start_containers_with_env(self) -> None:
+    def start_containers_with_env(self):
         """
         Start all required containers for integration testing.
 
@@ -110,6 +110,25 @@ class DifyTestContainers:
         except Exception as e:
             logger.warning("Failed to install uuid-ossp extension: %s", e)
 
+        # Create plugin database for dify-plugin-daemon
+        logger.info("Creating plugin database...")
+        try:
+            conn = psycopg2.connect(
+                host=db_host,
+                port=db_port,
+                user=self.postgres.username,
+                password=self.postgres.password,
+                database=self.postgres.dbname,
+            )
+            conn.autocommit = True
+            cursor = conn.cursor()
+            cursor.execute("CREATE DATABASE dify_plugin;")
+            cursor.close()
+            conn.close()
+            logger.info("Plugin database created successfully")
+        except Exception as e:
+            logger.warning("Failed to create plugin database: %s", e)
+
         # Set up storage environment variables
         os.environ["STORAGE_TYPE"] = "opendal"
         os.environ["OPENDAL_SCHEME"] = "fs"
@@ -151,10 +170,66 @@ class DifyTestContainers:
         wait_for_logs(self.dify_sandbox, "config init success", timeout=60)
         logger.info("Dify Sandbox container is ready and accepting connections")
 
+        # Start Dify Plugin Daemon container for plugin management
+        # Dify Plugin Daemon provides plugin lifecycle management and execution
+        logger.info("Initializing Dify Plugin Daemon container...")
+        self.dify_plugin_daemon = DockerContainer(image="langgenius/dify-plugin-daemon:0.3.0-local")
+        self.dify_plugin_daemon.with_exposed_ports(5002)
+        self.dify_plugin_daemon.env = {
+            "DB_HOST": db_host,
+            "DB_PORT": str(db_port),
+            "DB_USERNAME": self.postgres.username,
+            "DB_PASSWORD": self.postgres.password,
+            "DB_DATABASE": "dify_plugin",
+            "REDIS_HOST": redis_host,
+            "REDIS_PORT": str(redis_port),
+            "REDIS_PASSWORD": "",
+            "SERVER_PORT": "5002",
+            "SERVER_KEY": "test_plugin_daemon_key",
+            "MAX_PLUGIN_PACKAGE_SIZE": "52428800",
+            "PPROF_ENABLED": "false",
+            "DIFY_INNER_API_URL": f"http://{db_host}:5001",
+            "DIFY_INNER_API_KEY": "test_inner_api_key",
+            "PLUGIN_REMOTE_INSTALLING_HOST": "0.0.0.0",
+            "PLUGIN_REMOTE_INSTALLING_PORT": "5003",
+            "PLUGIN_WORKING_PATH": "/app/storage/cwd",
+            "FORCE_VERIFYING_SIGNATURE": "false",
+            "PYTHON_ENV_INIT_TIMEOUT": "120",
+            "PLUGIN_MAX_EXECUTION_TIMEOUT": "600",
+            "PLUGIN_STDIO_BUFFER_SIZE": "1024",
+            "PLUGIN_STDIO_MAX_BUFFER_SIZE": "5242880",
+            "PLUGIN_STORAGE_TYPE": "local",
+            "PLUGIN_STORAGE_LOCAL_ROOT": "/app/storage",
+            "PLUGIN_INSTALLED_PATH": "plugin",
+            "PLUGIN_PACKAGE_CACHE_PATH": "plugin_packages",
+            "PLUGIN_MEDIA_CACHE_PATH": "assets",
+        }
+
+        try:
+            self.dify_plugin_daemon.start()
+            plugin_daemon_host = self.dify_plugin_daemon.get_container_host_ip()
+            plugin_daemon_port = self.dify_plugin_daemon.get_exposed_port(5002)
+            os.environ["PLUGIN_DAEMON_URL"] = f"http://{plugin_daemon_host}:{plugin_daemon_port}"
+            os.environ["PLUGIN_DAEMON_KEY"] = "test_plugin_daemon_key"
+            logger.info(
+                "Dify Plugin Daemon container started successfully - Host: %s, Port: %s",
+                plugin_daemon_host,
+                plugin_daemon_port,
+            )
+
+            # Wait for Dify Plugin Daemon to be ready
+            logger.info("Waiting for Dify Plugin Daemon to be ready to accept connections...")
+            wait_for_logs(self.dify_plugin_daemon, "start plugin manager daemon", timeout=60)
+            logger.info("Dify Plugin Daemon container is ready and accepting connections")
+        except Exception as e:
+            logger.warning("Failed to start Dify Plugin Daemon container: %s", e)
+            logger.info("Continuing without plugin daemon - some tests may be limited")
+            self.dify_plugin_daemon = None
+
         self._containers_started = True
         logger.info("All test containers started successfully")
 
-    def stop_containers(self) -> None:
+    def stop_containers(self):
         """
         Stop and clean up all test containers.
 
@@ -166,7 +241,7 @@ class DifyTestContainers:
             return
 
         logger.info("Stopping and cleaning up test containers...")
-        containers = [self.redis, self.postgres, self.dify_sandbox]
+        containers = [self.redis, self.postgres, self.dify_sandbox, self.dify_plugin_daemon]
         for container in containers:
             if container:
                 try:
@@ -269,6 +344,12 @@ def _create_app_with_containers() -> Flask:
         with db.engine.connect() as conn, conn.begin():
             conn.execute(text(_UUIDv7SQL))
         db.create_all()
+        # migration_dir = _get_migration_dir()
+        # alembic_config = Config()
+        # alembic_config.config_file_name = str(migration_dir / "alembic.ini")
+        # alembic_config.set_main_option("sqlalchemy.url", _get_engine_url(db.engine))
+        # alembic_config.set_main_option("script_location", str(migration_dir))
+        # alembic_command.upgrade(revision="head", config=alembic_config)
     logger.info("Database schema created successfully")
 
     logger.info("Flask application configured and ready for testing")

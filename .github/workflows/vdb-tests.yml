@@ -1,15 +1,7 @@
 name: Run VDB Tests
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - api/core/rag/datasource/**
-      - docker/**
-      - .github/workflows/vdb-tests.yml
-      - api/uv.lock
-      - api/pyproject.toml
+  workflow_call:
 
 concurrency:
   group: vdb-tests-${{ github.head_ref || github.run_id }}
@@ -84,7 +76,11 @@ jobs:
             chroma
             elasticsearch
             oceanbase
+<<<<<<< HEAD
           compose-flags: "--profile oceanbase --profile weaviate --profile qdrant --profile couchbase --profile milvus --profile pgvector --profile pgvecto-rs --profile chroma --profile elasticsearch"
+=======
+
+>>>>>>> v1.9.0
       - name: setup test config
         run: |
           echo $(pwd)
