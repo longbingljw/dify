@@ -76,11 +76,7 @@ jobs:
             chroma
             elasticsearch
             oceanbase
-<<<<<<< HEAD
           compose-flags: "--profile oceanbase --profile weaviate --profile qdrant --profile couchbase --profile milvus --profile pgvector --profile pgvecto-rs --profile chroma --profile elasticsearch"
-=======
-
->>>>>>> v1.9.0
       - name: setup test config
         run: |
           echo $(pwd)

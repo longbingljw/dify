@@ -24,11 +24,7 @@ def url_encode_wrapper(params: dict[str, Any]) -> str:
     return url_encode(params)
 
 
-<<<<<<< HEAD
-def no_key_cache_key(namespace, key):
-=======
 def no_key_cache_key(namespace: str, key: str) -> str:
->>>>>>> v1.9.0
     return f"{namespace}{len(namespace)}{key}"
 
 

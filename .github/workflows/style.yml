@@ -1,13 +1,9 @@
 name: Style check
 
 on:
-<<<<<<< HEAD
   pull_request:
     branches:
       - temporary-ban
-=======
-  workflow_call:
->>>>>>> v1.9.0
 
 concurrency:
   group: style-${{ github.head_ref || github.run_id }}
@@ -51,12 +47,6 @@ jobs:
 
       - name: Run Import Linter
         if: steps.changed-files.outputs.any_changed == 'true'
-<<<<<<< HEAD
-        run: |
-          uv run --directory api ruff --version
-          uv run --directory api ruff check ./
-          uv run --directory api ruff format --check ./
-=======
         run: uv run --directory api --dev lint-imports
 
       - name: Run Basedpyright Checks
@@ -66,7 +56,6 @@ jobs:
       - name: Run Mypy Type Checks
         if: steps.changed-files.outputs.any_changed == 'true'
         run: uv --directory api run mypy --exclude-gitignore --exclude 'tests/' --exclude 'migrations/' --check-untyped-defs --disable-error-code=import-untyped .
->>>>>>> v1.9.0
 
       - name: Dotenv check
         if: steps.changed-files.outputs.any_changed == 'true'
@@ -113,12 +102,8 @@ jobs:
       - name: Web style check
         if: steps.changed-files.outputs.any_changed == 'true'
         working-directory: ./web
-<<<<<<< HEAD
-        run: pnpm run lint
-=======
         run: |
           pnpm run lint
->>>>>>> v1.9.0
 
   docker-compose-template:
     name: Docker Compose Template

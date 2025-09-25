@@ -570,11 +570,7 @@ model: %s""",
 
             return config
 
-<<<<<<< HEAD
-    def cooldown(self, config: ModelLoadBalancingConfiguration, expire: int = 60) -> None:
-=======
     def cooldown(self, config: ModelLoadBalancingConfiguration, expire: int = 60):
->>>>>>> v1.9.0
         """
         Cooldown model load balancing config
         :param config: model load balancing config

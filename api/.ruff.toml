@@ -1,11 +1,7 @@
-<<<<<<< HEAD
 exclude = [
     "migrations/*",
     "migrations-mysql/*",
 ]
-=======
-exclude = ["migrations/*"]
->>>>>>> v1.9.0
 line-length = 120
 
 [format]
@@ -37,10 +33,7 @@ select = [
     "RUF022",  # unsorted-dunder-all
     "S506",    # unsafe-yaml-load
     "SIM",     # flake8-simplify rules
-<<<<<<< HEAD
-=======
     "T201",    # print-found
->>>>>>> v1.9.0
     "TRY400",  # error-instead-of-exception
     "TRY401",  # verbose-log-message
     "UP",      # pyupgrade rules
@@ -56,10 +49,7 @@ select = [
     "G001", # don't use str format to logging messages
     "G003", # don't use + in logging messages
     "G004", # don't use f-strings to format logging messages
-<<<<<<< HEAD
-=======
     "UP042", # use StrEnum
->>>>>>> v1.9.0
 ]
 
 ignore = [
@@ -79,10 +69,7 @@ ignore = [
     "B006",    # mutable-argument-default
     "B007",    # unused-loop-control-variable
     "B026",    # star-arg-unpacking-after-keyword-arg
-<<<<<<< HEAD
-=======
     "B901",    # allow return in yield
->>>>>>> v1.9.0
     "B903",    # class-as-data-structure
     "B904",    # raise-without-from-inside-except
     "B905",    # zip-without-explicit-strict

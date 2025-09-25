@@ -29,13 +29,6 @@ def get_signed_file_url_for_plugin(filename: str, mimetype: str, tenant_id: str,
     # Plugin access should use internal URL for Docker network communication
     base_url = dify_config.INTERNAL_FILES_URL or dify_config.FILES_URL
     url = f"{base_url}/files/upload/for-plugin"
-<<<<<<< HEAD
-
-    if user_id is None:
-        user_id = "DEFAULT-USER"
-
-=======
->>>>>>> v1.9.0
     timestamp = str(int(time.time()))
     nonce = os.urandom(16).hex()
     key = dify_config.SECRET_KEY.encode()

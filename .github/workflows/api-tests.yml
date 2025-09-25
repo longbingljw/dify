@@ -42,15 +42,11 @@ jobs:
       - name: Run Unit tests
         run: |
           uv run --project api bash dev/pytest/pytest_unit_tests.sh
-<<<<<<< HEAD
       - name: Run ty check
         run: |
           cd api
           uv add --dev ty
           uv run ty check || true
-=======
-
->>>>>>> v1.9.0
       - name: Run pyrefly check
         run: |
           cd api
