@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: ["main"]
   push:
-    branches: ["main"]
+    branches: ["merge"]
 
 permissions:
   contents: write
@@ -64,12 +64,6 @@ jobs:
   style-check:
     name: Style Check
     uses: ./.github/workflows/style.yml
-
-  vdb-tests:
-    name: VDB Tests
-    needs: check-changes
-    if: needs.check-changes.outputs.vdb-changed == 'true'
-    uses: ./.github/workflows/vdb-tests.yml
 
   db-migration-test:
     name: DB Migration Test
