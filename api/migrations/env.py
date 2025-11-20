@@ -1,6 +1,6 @@
 import logging
 from logging.config import fileConfig
-
+from datetime import datetime
 from alembic import context
 from flask import current_app
 
@@ -99,9 +99,18 @@ def run_migrations_online():
             include_object=include_object,
             **current_app.extensions['migrate'].configure_args
         )
+        # Print timestamp before first migration
+        start_time = datetime.now()
+        start_timestamp = start_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+        print(f"[{start_timestamp}] Starting migrations...")
 
         with context.begin_transaction():
             context.run_migrations()
+        # Print timestamp after last migration and calculate duration
+        end_time = datetime.now()
+        end_timestamp = end_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+        duration = (end_time - start_time).total_seconds()
+        print(f"[{end_timestamp}] Migrations completed in {duration:.3f} seconds")
 
 
 if context.is_offline_mode():
