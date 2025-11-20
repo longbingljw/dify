@@ -128,10 +128,15 @@ if env_file.exists():
     # Run database migration
     print("Running database migration...")
     try:
+        # Set environment variables for faster package installation
+        env_with_mirror = env.copy()
+        env_with_mirror['UV_INDEX_URL'] = 'https://pypi.tuna.tsinghua.edu.cn/simple'
+        env_with_mirror['UV_EXTRA_INDEX_URL'] = 'https://pypi.tuna.tsinghua.edu.cn/simple'
+
         result = subprocess.run(
             ["uv", "run", "--project", "api", "flask", "db", "upgrade"],
             cwd="api",
-            env=env,
+            env=env_with_mirror,
             timeout=300
         )
         if result.returncode == 0:
