@@ -2,8 +2,13 @@
 """
 PostgreSQL to MySQL Data Migration Script for Dify
 
-This script migrates all data from PostgreSQL to MySQL using Dify's ORM models.
-It leverages the TypeDecorator system in models/types.py for automatic type conversion.
+This script migrates all data from PostgreSQL to MySQL using SQLAlchemy Core.
+It uses Dify's table metadata and SQLAlchemy's type system for automatic type conversion.
+
+Key features:
+    - Preserves all field values including updated_at timestamps
+    - Automatic JSON serialization for dict/list fields
+    - Batch processing for large tables
 
 Usage:
     uv run --project api python scripts/migrate_pg_to_mysql.py
@@ -146,7 +151,7 @@ def verify_migration(pg_engine, mysql_engine, table_name):
 @click.option("--tables", help="Comma-separated list of specific tables to migrate")
 def main(pg_url, mysql_url, batch_size, verify, tables):
     """
-    Migrate all data from PostgreSQL to MySQL using Dify ORM models.
+    Migrate all data from PostgreSQL to MySQL using SQLAlchemy Core.
     """
     global BATCH_SIZE
     BATCH_SIZE = batch_size
