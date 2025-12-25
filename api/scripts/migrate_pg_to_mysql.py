@@ -27,14 +27,14 @@ api_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(api_dir))
 
 import click
-from sqlalchemy import create_engine, inspect, text, func
+from sqlalchemy import create_engine, text, func
 from sqlalchemy.orm import sessionmaker
 
 # PostgreSQL connection
 PG_URL = "postgresql://postgres:difyai123456@localhost:5432/dify"
 
 # MySQL connection  
-MYSQL_URL = "mysql+pymysql://root:difyai123456@localhost:3306/dify"
+MYSQL_URL = "mysql+pymysql://root:difyai123456@localhost:2881/dify"
 
 # Batch size for migration
 BATCH_SIZE = 1000
