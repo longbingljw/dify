@@ -2,6 +2,8 @@ name: DB Migration Test
 
 on:
   workflow_call:
+  push:
+    branches: ["test-pg"]
 
 concurrency:
   group: db-migration-test-${{ github.ref }}
