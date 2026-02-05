@@ -2,6 +2,8 @@ name: DB Migration Test
 
 on:
   workflow_call:
+  push:
+    branches: ["ci-fix"]
 
 concurrency:
   group: db-migration-test-${{ github.ref }}
